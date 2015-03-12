@@ -25,6 +25,10 @@ app.config(function($routeProvider, $locationProvider) {
         templateUrl: "delete-play.html"
         //params.playID
     });
+    $routeProvider.when('/plays/:playID/edit', {
+        templateUrl: "edit-play.html"
+        //params.playID
+    });
     $routeProvider.when('/plays/:playID/scoreboard', {
         templateUrl: "scoreboard.html"
         //params.playID
@@ -65,6 +69,30 @@ app.controller('PlayerController', function($rootScope, $scope, $firebase, $rout
                     player.$save();
                     $window.history.go(-1);
                 }
+            }
+        }
+    }
+});
+app.controller('PlayController', function($rootScope, $scope, $firebase, $routeParams, $location, $window) {
+    //EDITING GAME
+    $rootScope.loading = true;
+    var params = $routeParams;
+    if($scope.user) {
+        if(params.playID) {
+            var playRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID);
+            var adminRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID + "/admins");
+            var play = $firebase(playRef).$asObject();
+            var admins = $firebase(adminRef).$asArray();
+            $rootScope.loading = false;
+            $scope.play = play;
+            $scope.admins = admins;
+            console.log("admins: " + admins.length);
+            //console.log(admins);
+            //$scope.player.playerNameTitle = player.playername;
+            $scope.updatePlay = function() {
+                console.log("play updated");
+                play.$save();
+                //$window.history.go(-1);
             }
         }
     }
@@ -138,7 +166,6 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     playRef.child("numberOfPlayers").once("value", function(data) {
                         newNumberOfPlayers = data.val();
                     }); //CHECK REFERENCE DIRECTLY BECAUSE $scope.numberOfPlayers WILL BE OUT OF DATE
-                    
                     var numberOfColumns = Math.ceil(newNumberOfPlayers / 10); //10 PER COLUMN
                     //THIS COULD PROBABLY BE DONE NEATER
                     var styles1 = []; //column #1
@@ -160,16 +187,13 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     $scope.columnStyle2 = styles2[numberOfColumns];
                     $scope.columnStyle3 = styles3[numberOfColumns];
                 }
-                
                 checkColumns(); //CHECK COLUMNS ON LOAD
-                
                 players.$watch(function(event) {
                     checkColumns(); //CHECK COLUMNS EVERY TIME PLAYERS ARE ADDED OR REMOVED
                 });
                 //
                 //functions
                 //
-
                 $scope.addPlayer = function() {
                     var time = new Date();
                     play.time = time.toUTCString();
@@ -189,7 +213,6 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     });
                     $scope.playerName = "";
                 }
-                
                 $scope.removePlayer = function(player) {
                     console.log("delete player: " + player.$id);
                     players.$remove(player).then(function(ref) {
@@ -200,7 +223,6 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                         console.log("Error:", error);
                     });
                 }
-                
                 $scope.updateScore = function(player, update) {
                     var playerNum = players.$indexFor(player.$id);
                     clearTimeout(timer[playerNum]); //RESET TIMER FOR THIS PLAYER
@@ -245,23 +267,21 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                         });
                     });
                 }
-                
                 $scope.updateStars = function(player, update) {
                     var time = new Date();
                     play.time = time.toUTCString();
                     play.ISOtime = time.toISOString();
                     play.$save();
                     var newScore = player.stars + Number(update);
-                    if(newScore>3) newScore = 3;
-                    if(newScore<0) newScore = 0;
-                    player.stars = newScore;                    
+                    if(newScore > 3) newScore = 3;
+                    if(newScore < 0) newScore = 0;
+                    player.stars = newScore;
                     players.$save(player).then(function() {
                         console.log(" -> successful");
                     });
                 }
-                
             });
-        } else {  //show all plays
+        } else { //show all plays
             console.log("list games");
             var ref = new Firebase("https://pointi-scoreboard.firebaseio.com/play-access/" + $scope.user.uid);
             var availablePlays = $firebase(ref).$asArray();
@@ -281,7 +301,6 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                 });
                 $scope.playCount = playCount;
                 $scope.playsToShow = playsToShow;
-                
                 $scope.addPlay = function() {
                     var playsRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/");
                     var plays = $firebase(playsRef).$asArray();
@@ -296,9 +315,20 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     }).then(function(ref) {
                         var id = ref.key();
                         console.log("added record with id " + id);
+                        //ADD TO LIST OF ADMINS 
+                        var adminRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + id + "/admins");
+                        adminRef.child($scope.user.uid).set({
+                            name: $scope.userDetails.name
+                        }, function(error) {
+                            if(error) {
+                                console.log("error: " + error);
+                            }
+                        });
+                        //CREATE ACCESS RECORD WITH NEW PLAY $id AS KEY, 
+                        //(DATE IS NOT NECESSARY BUT USEFUL FOR SEEING CREATION DATE)
                         var accessRef = new Firebase("https://pointi-scoreboard.firebaseio.com/play-access/" + $scope.user.uid);
                         accessRef.child(id).set({
-                            time: time.toUTCString() //CREATE ACCESS RECORD WITH NEW PLAY $id AS KEY, DATE IS NOT NECESSARY BUT USEFUL FOR SEEING CREATION DATE
+                            time: time.toUTCString()
                         }, function(error) {
                             $window.location.href = "#/plays/" + id + "/details"; //LOAD PLAY AFTER CREATING
                             if(error) {
@@ -307,14 +337,12 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                         });
                     });
                 }
-                
             });
         }
     } else {
         $rootScope.loading = false;
     }
 });
-
 app.controller('MainController', function($rootScope, $scope, $firebase, $window, Auth) {
     //ROUTING
     $rootScope.$on("$routeChangeStart", function() {
