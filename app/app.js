@@ -94,6 +94,47 @@ app.controller('PlayController', function($rootScope, $scope, $firebase, $routeP
                 play.$save();
                 //$window.history.go(-1);
             }
+            $scope.addAdmin = function() {
+                console.log("add admin: " + $scope.adminEmail);
+                var time = new Date();
+                //FIND USER BY EMAIL ADDRESS
+                var usersRef = new Firebase("https://pointi-scoreboard.firebaseio.com/users/");
+                var success = false;
+                var adminUid = "";
+                var currentAdminRecordID = "";
+                var adminAdminRecordID = "";
+                usersRef.once('value', function(dataSnapshot) {
+                    dataSnapshot.forEach(function(childSnapshot) {
+                        //CHECK EACH USER'S EMAIL
+                        var adminEmail = childSnapshot.child("password").child("email").val();
+                        var adminName = childSnapshot.child("details").child("name").val();
+                        if(adminEmail == $scope.adminEmail) {
+                            //ADD USER TO PLAY ADMIN LIST
+                            var newAdmin = childSnapshot.val(); //admin USER OBJECT
+                            var adminsListRef = new Firebase("https://pointi-scoreboard.firebaseio.com/" + params.playID + "/admins/" + newAdmin.uid); //ADD CHILD FOR admin UID
+                            adminsListRef.set({
+                                name: adminName //NAME OF admin
+                            });
+                            //ADD ACCESS RECORD FOR USER
+                            var accessRef = new Firebase("https://pointi-scoreboard.firebaseio.com/play-access/" + newAdmin.uid + "/" + params.playID);
+                            accessRef.set({
+                                time: time.toUTCString()
+                            });
+                            
+                            $rootScope.toggle('overlay-add-admin', 'off');
+                            success = true;
+                            return true;
+                        }
+                    });
+                    if(!success) {
+                        //error message
+                        console.log("user not found");
+                        //$scope.add.error = "User not found";
+                    }
+                }, function(err) {
+                    console.log("Error with once(): " + err);
+                });
+            }
         }
     }
 });
