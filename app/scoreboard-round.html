@@ -1,5 +1,6 @@
 <div class="scrollable" ng-controller="ScoreController3">
     <div class="scrollable-content section">
+        <div ng-if="user">
             <div ng-hide="numberOfPlayers">
                 <div class="panel panel-success">
                     <div class="panel-body text-center">
@@ -13,7 +14,7 @@
                 <div class="row">
                     <div>
                         <div class="text-center">
-                            <h3>&nbsp;&nbsp;&nbsp;{{play.gameName}}&nbsp;&nbsp;&nbsp;<span class="btn btn-default" disabled="disabled">{{play.ISOtime | date:'fullDate'}}</span> </h3>
+                            <h3><img src="{{play.logoURL}}" class="name-width img-rounded">&nbsp;&nbsp;&nbsp;{{play.gameName}}&nbsp;&nbsp;&nbsp;<span class="btn btn-default" disabled="disabled">{{play.ISOtime | date:'fullDate'}}</span> </h3>
                         </div>
                     </div>
                 </div>
@@ -70,6 +71,6 @@
                 </div>
             </div>
 
-
+        </div>
     </div>
 </div>

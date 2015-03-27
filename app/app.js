@@ -412,7 +412,8 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                         time: time.toUTCString(),
                         ISOtime: time.toISOString(),
                         numberOfPlayers: 0,
-                        roundMode: roundMode
+                        roundMode: roundMode,
+                        logoURL: ""
                     }).then(function(ref) {
                         var id = ref.key();
                         console.log("added record with id " + id);

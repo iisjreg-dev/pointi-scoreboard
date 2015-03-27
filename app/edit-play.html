@@ -12,6 +12,8 @@
                     <form ng-submit="updatePlay()">
                         <div bs-panel>
                             <input bs-form-control type="text" ng-model="play.gameName" label="Name" label-class="col-xs-3 col-sm-2 col-lg-1" class="col-xs-9 col-sm-10 col-lg-11" placeholder="Event Name" />
+                            <input bs-form-control type="text" ng-model="play.logoURL" label="Logo URL (120px)" label-class="col-xs-3 col-sm-2 col-lg-1" class="col-xs-9 col-sm-10 col-lg-11" placeholder="http://" />
+                            <img src="{{play.logoURL}}" class="name-width img-rounded">
                         </div>
                         Round-by-Round mode?<switch id="roundMode" ng-model="play.roundMode"></switch>&nbsp;<br />
                         <p>&nbsp;</p>
