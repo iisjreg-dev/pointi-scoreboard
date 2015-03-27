@@ -228,10 +228,11 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
 
                 function checkColumns() { //FOR SCOREBOARD VIEW
                     var newNumberOfPlayers;
+                    var numberPerColumn = 10; //PER COLUMN
                     playRef.child("numberOfPlayers").once("value", function(data) {
                         newNumberOfPlayers = data.val();
                     }); //CHECK REFERENCE DIRECTLY BECAUSE $scope.numberOfPlayers WILL BE OUT OF DATE
-                    var numberOfColumns = Math.ceil(newNumberOfPlayers / 10); //10 PER COLUMN
+                    var numberOfColumns = Math.ceil(newNumberOfPlayers / numberPerColumn); 
                     //THIS COULD PROBABLY BE DONE NEATER
                     var styles1 = []; //column #1
                     var styles2 = []; //column #2
