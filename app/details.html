@@ -42,7 +42,7 @@
                     &nbsp;&nbsp;&nbsp;
                     <div class="btn-group" role="group">
                         <a class="btn btn-default name-width" disabled="disabled">
-                            <strong class="text-capitalize"> {{player.playerName}}</strong>&nbsp;
+                            <strong class="text-capitalize"> {{player.playerName | limitTo:10}}</strong>&nbsp;
                             <small ng-if="!play.roundMode"><i class="fa fa-star" ng-if="player.stars>0"></i>
                                 <i class="fa fa-star" ng-if="player.stars>1"></i>
                                 <i class="fa fa-star" ng-if="player.stars>2"></i>
@@ -134,7 +134,7 @@
             <div class="panel-body">
                 <p>
                     <form class="form-inline" role="form" ng-submit="addPlayer()">
-                        <input type='text' ng-model='playerName' id='playerName' placeholder='Name (max 13 characters)' class="form-control" maxlength=13>
+                        <input type='text' ng-model='playerName' id='playerName' placeholder='Name (max 13 characters)' class="form-control">
                         <button type="submit" class="btn btn-info form-control" toggle="off" bubble target="overlay-new-player">Add new player</button>
 
                     </form>

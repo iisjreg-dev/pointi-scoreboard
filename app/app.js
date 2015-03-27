@@ -237,7 +237,7 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     var styles2 = []; //column #2
                     var styles3 = []; //column #3
                     //1 column layout
-                    styles1[1] = "col-xs-12 col-md-6 col-md-offset-3";
+                    styles1[1] = "col-xs-12 col-md-10 col-md-offset-1";
                     styles2[1] = "hidden";
                     styles3[1] = "hidden";
                     //2 column layout
@@ -275,7 +275,7 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     $scope.numberOfPlayers = numberOfPlayers; //^^^ REDUNDANT CAT IS REDUNDANT?
                     var playerName = $scope.playerName || 'anonymous'; //SHOULDN'T BE USED - SHOULD HANDLE BLANK FORM BETTER
                     $scope.players.$add({
-                        playerName: playerName.substr(0, 13), //LIMIT TO 13 CHARACTER NAMES
+                        playerName: playerName,// .substr(0, 13), //LIMIT TO 13 CHARACTER NAMES - NOT NEEDED, WILL USE FILTERS
                         playerScore: 0,
                         jokerRound: false,
                         turnOrder: 0,
