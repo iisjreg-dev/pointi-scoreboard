@@ -22,7 +22,9 @@
                     </div>
                     <div class="col-xs-6 col-sm-6 col-md-6 text-right">
                         <div class="btn-group" role="group">
-                            <a class="btn btn-success" href="scoreboard-index.html#/plays/{{play.$id}}/scoreboard"><i class="fa fa-desktop fa-fw"></i>
+                            <a ng-if="!play.roundMode" class="btn btn-success" href="scoreboard-index.html#/plays/{{play.$id}}/scoreboard"><i class="fa fa-desktop fa-fw"></i>
+                            </a>
+                            <a ng-if="play.roundMode" class="btn btn-success" href="scoreboard-index.html#/plays/{{play.$id}}/scoreboard-round"><i class="fa fa-desktop fa-fw"></i>
                             </a>
                             <a class="btn btn-default" href="#/plays/{{play.$id}}/edit"><i class="fa fa-edit fa-fw"></i>
                             </a>
@@ -39,11 +41,16 @@
                 <div class="row">
                     &nbsp;&nbsp;&nbsp;
                     <div class="btn-group" role="group">
-                        <a class="btn btn-default name-width" disabled="disabled"><strong class="text-capitalize"> {{player.playerName}}</strong> <small><i class="fa fa-star" ng-if="player.stars>0"></i>
+                        <a class="btn btn-default name-width" disabled="disabled">
+                            <strong class="text-capitalize"> {{player.playerName}}</strong>&nbsp;
+                            <small ng-if="!play.roundMode"><i class="fa fa-star" ng-if="player.stars>0"></i>
                                 <i class="fa fa-star" ng-if="player.stars>1"></i>
                                 <i class="fa fa-star" ng-if="player.stars>2"></i>
-                                </small>
-                            </a>
+                            </small>
+                            <small ng-if="play.roundMode">
+                                ({{player.numberOfRounds}})
+                            </small>
+                        </a>
                         <a class="btn btn-primary score-width" disabled="disabled">
                                 {{player.playerScore}}&nbsp;&nbsp;<sup><i class="badge">{{player.tempScore}}</i></sup>
                             </a>
@@ -64,6 +71,7 @@
 
                     </p>
                 </div>
+                
                 <div overlay="overlay-{{player.$id}}">
                     <h4 class="overlay-title text-capitalize">Add Score for {{player.playerName}}</h4>
                     <p>
@@ -82,10 +90,11 @@
                             <button class="btn btn-danger" ng-click="updateScore(player,-10)"><i class="fa fa-minus-square-o fa-fw"></i>10</button>
                         </div>
                     </p>
-                <h4 class="overlay-title text-capitalize">Stars for {{player.playerName}}</h4>
+                <h4 ng-if="!play.roundMode" class="overlay-title text-capitalize">Stars for {{player.playerName}}</h4>
+                <h4 ng-if="play.roundMode" class="overlay-title text-capitalize">Joker round for {{player.playerName}}?</h4>
                     
                     <p>
-                        <div class="btn-group">
+                        <div class="btn-group" ng-if="!play.roundMode">
                             <a class="btn btn-default" ng-click="updateStars(player,-1)">
                                 <i class="fa fa-minus-square-o fa-fw"></i>
                             </a>
@@ -100,6 +109,9 @@
                             <a class="btn btn-default" ng-click="updateStars(player,1)">
                                 <i class="fa fa-plus-square-o fa-fw"></i>
                             </a>
+                        </div>
+                        <div class="btn-group" ng-if="play.roundMode">
+                            <switch id="jokerRound" ng-model="player.jokerRound"></switch>&nbsp;<br />
                         </div>
                     </p>
                 </div>

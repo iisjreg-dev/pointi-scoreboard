@@ -33,10 +33,11 @@
         <!-- OVERLAYS -->
         <div overlay="overlay-new-play">
             <div class="panel panel-success">
-                <div class="panel-heading">Play new game</div>
+                <div class="panel-heading">Add new event</div>
                 <div class="panel-body">
                         <form class="form-inline" role="form" ng-submit="addPlay()">
-                        <input type='text' ng-model='gameName' id='gameName' placeholder='Game Name' class="form-control">
+                        <input type='text' ng-model='gameName' id='gameName' placeholder='Game Name' class="form-control">&nbsp;<br />
+                        Round-by-Round mode?<switch id="roundMode" ng-model="roundMode"></switch>&nbsp;<br />
                         <button type="submit" class="btn btn-primary form-control" toggle="off" bubble target="overlay-new-play">Add</button>
                         </form>
                 </div>

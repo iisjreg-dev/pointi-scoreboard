@@ -29,13 +29,18 @@ app.config(function($routeProvider, $locationProvider) {
         templateUrl: "edit-play.html"
         //params.playID
     });
+    $routeProvider.when('/plays/:playID/edit/:playerID', {
+        templateUrl: "edit-player.html"
+        //params.playID & params.playerID
+    });
+    //only used under SCOREBOARD-INDEX.HTML
     $routeProvider.when('/plays/:playID/scoreboard', {
         templateUrl: "scoreboard.html"
         //params.playID
     });
-    $routeProvider.when('/plays/:playID/edit/:playerID', {
-        templateUrl: "edit-player.html"
-        //params.playID & params.playerID
+    $routeProvider.when('/plays/:playID/scoreboard-round', {
+        templateUrl: "scoreboard-round.html"
+        //params.playID
     });
 });
 app.filter('displayPart', function() { //custom 'pagination' filter, used to seperate scorebaord into 3 columns
@@ -58,16 +63,34 @@ app.controller('PlayerController', function($rootScope, $scope, $firebase, $rout
             if(params.playerID) {
                 var playRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID);
                 var playerRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID + "/players/" + params.playerID);
+                var roundsRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID + "/players/" + params.playerID + "/rounds");
                 var play = $firebase(playRef).$asObject();
                 var player = $firebase(playerRef).$asObject();
+                var rounds = $firebase(roundsRef).$asArray();
                 $rootScope.loading = false;
                 $scope.play = play;
                 $scope.player = player;
+                $scope.rounds = rounds;
                 //$scope.player.playerNameTitle = player.playername;
                 $scope.updatePlayer = function() {
                     console.log("player updated");
                     player.$save();
                     $window.history.go(-1);
+                }
+                $scope.updatePlayerTotal = function() {
+                    console.log("player total updated");
+                    var newTotal = 0;
+                    roundsRef.once('value', function(dataSnapshot) {
+                        dataSnapshot.forEach(function(childSnapshot) {
+                            //CHECK EACH USER'S EMAIL
+                            newTotal += childSnapshot.child("score").val();
+                        });
+                    }, function(err) {
+                        console.log("Error with once(): " + err);
+                    });
+                    player.playerScore = newTotal;
+                    console.log("player updated");
+                    player.$save();
                 }
             }
         }
@@ -95,7 +118,6 @@ app.controller('PlayController', function($rootScope, $scope, $firebase, $routeP
                     play.$save();
                     //$window.history.go(-1);
                 }
-                
                 $scope.addAdmin = function() {
                     console.log("add admin: " + $scope.adminEmail);
                     var time = new Date();
@@ -204,7 +226,7 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                 $scope.columnStyle2 = "";
                 $scope.columnStyle3 = "";
 
-                function checkColumns() {
+                function checkColumns() { //FOR SCOREBOARD VIEW
                     var newNumberOfPlayers;
                     playRef.child("numberOfPlayers").once("value", function(data) {
                         newNumberOfPlayers = data.val();
@@ -230,10 +252,16 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     $scope.columnStyle2 = styles2[numberOfColumns];
                     $scope.columnStyle3 = styles3[numberOfColumns];
                 }
-                checkColumns(); //CHECK COLUMNS ON LOAD
-                players.$watch(function(event) {
-                    checkColumns(); //CHECK COLUMNS EVERY TIME PLAYERS ARE ADDED OR REMOVED
-                });
+                //if(!play.roundMode) {
+                    checkColumns(); //CHECK COLUMNS ON LOAD
+                    players.$watch(function(event) {
+                        checkColumns(); //CHECK COLUMNS EVERY TIME PLAYERS ARE ADDED OR REMOVED
+                    });
+                //}
+                
+                
+                
+                
                 //
                 //functions
                 //
@@ -242,14 +270,16 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     play.time = time.toUTCString();
                     play.ISOtime = time.toISOString();
                     play.numberOfPlayers += 1;
-                    play.$save(); //SHOULD PROBABLY GO IN A PROMISE AFTER ACTUALLY ADDING THE PLAYER vvv
+                    play.$save(); //SHOULD PROBABLY GO IN A PROMISE AFTER ACTUALLY ADDING THE PLAYER
                     numberOfPlayers += 1; //WHY?
                     $scope.numberOfPlayers = numberOfPlayers; //^^^ REDUNDANT CAT IS REDUNDANT?
                     var playerName = $scope.playerName || 'anonymous'; //SHOULDN'T BE USED - SHOULD HANDLE BLANK FORM BETTER
                     $scope.players.$add({
                         playerName: playerName.substr(0, 13), //LIMIT TO 13 CHARACTER NAMES
                         playerScore: 0,
+                        jokerRound: false,
                         turnOrder: 0,
+                        numberOfRounds: 0,
                         tempScore: "",
                         stars: 0,
                         history: ""
@@ -282,11 +312,20 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                 }
 
                 function finalupdate(player, playerNum, update) {
+                    console.log("jokerRound: " + player.jokerRound)
+                    var joker = false;
+                    if(player.jokerRound) {
+                        joker = true;
+                        player.jokerRound = false;
+                    }
                     $rootScope.toggle('overlay-' + player.$id, 'off');
                     var time = new Date();
                     play.time = time.toUTCString();
                     play.ISOtime = time.toISOString(); //BOTH WERE SAVED WHILE I WORKED OUT DATE FORMATS, BUT FILTERS ARE NOW EMPLOYED ON THE ISO TIME
                     play.$save();
+                    if(play.roundMode && joker) {
+                        update = update * 2;
+                    } //OBVIOUSLY THIS SHOULD BE AN EDITABLE VARIABLE
                     var newScore = player.playerScore + Number(update);
                     console.log(player.playerName + " scored " + update + " = " + newScore);
                     player.playerScore = newScore;
@@ -299,6 +338,9 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                         newHistory = newHistory.substr(0, maxHistory).concat("...");
                     }
                     player.history = newHistory;
+                    if(play.roundMode) {
+                        player.numberOfRounds += 1;
+                    }
                     players.$save(player).then(function() {
                         console.log(" -> successful");
                         clearTimeout(timer[playerNum]); //CLEAR ANY LINGERING TIMER
@@ -308,6 +350,15 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                             score: newScore,
                             time: time.toUTCString()
                         });
+                        if(play.roundMode) {
+                            var playerRoundScoreRef = playerRef.child(player.$id + "/rounds");
+                            playerRoundScoreRef.push({ //TO BE USED FOR GRAPHS? NOT USED IN SCOREBOARD, YET
+                                round: player.numberOfRounds,
+                                joker: joker,
+                                score: update,
+                                time: time.toUTCString()
+                            });
+                        }
                     });
                 }
                 $scope.updateStars = function(player, update) {
@@ -349,12 +400,18 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     var plays = $firebase(playsRef).$asArray();
                     var gameName = $scope.gameName || 'anonymous';
                     var time = new Date();
+                    var roundMode = false;
+                    if($scope.roundMode) {
+                        roundMode = true
+                    }
+                    console.log("roundMode: " + roundMode);
                     plays.$add({
                         gameName: gameName,
                         creatorUid: $scope.user.uid,
                         time: time.toUTCString(),
                         ISOtime: time.toISOString(),
-                        numberOfPlayers: 0
+                        numberOfPlayers: 0,
+                        roundMode: roundMode
                     }).then(function(ref) {
                         var id = ref.key();
                         console.log("added record with id " + id);
