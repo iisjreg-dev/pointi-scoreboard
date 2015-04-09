@@ -104,60 +104,79 @@ app.controller('PlayController', function($rootScope, $scope, $firebase, $routeP
         if(params.playID) {
             var playRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID);
             var adminRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID + "/admins");
+            var roundTitlesRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID + "/roundTitles");
             var play = $firebase(playRef).$asObject();
             var admins = $firebase(adminRef).$asArray();
+            var roundTitles = $firebase(roundTitlesRef).$asArray();
             $rootScope.loading = false;
             $scope.play = play;
-            $scope.admins = admins;
             admins.$loaded().then(function() {
-                console.log("admins: " + admins.length);
-                //console.log(admins);
-                //$scope.player.playerNameTitle = player.playername;
-                $scope.updatePlay = function() {
-                    console.log("play updated");
-                    play.$save();
-                    //$window.history.go(-1);
-                }
-                $scope.addAdmin = function() {
-                    console.log("add admin: " + $scope.adminEmail);
-                    var time = new Date();
-                    //FIND USER BY EMAIL ADDRESS
-                    var usersRef = new Firebase("https://pointi-scoreboard.firebaseio.com/users/");
-                    var success = false;
-                    var adminUid = "";
-                    var currentAdminRecordID = "";
-                    var adminAdminRecordID = "";
-                    usersRef.once('value', function(dataSnapshot) {
-                        dataSnapshot.forEach(function(childSnapshot) {
-                            //CHECK EACH USER'S EMAIL
-                            var adminEmail = childSnapshot.child("password").child("email").val();
-                            var adminName = childSnapshot.child("details").child("name").val();
-                            if(adminEmail == $scope.adminEmail) {
-                                //ADD USER TO PLAY ADMIN LIST
-                                var newAdmin = childSnapshot.val(); //admin USER OBJECT
-                                var adminsListRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID + "/admins/" + newAdmin.uid); //ADD CHILD FOR admin UID
-                                adminsListRef.set({
-                                    name: adminName //NAME OF admin
-                                });
-                                //ADD ACCESS RECORD FOR USER
-                                var accessRef = new Firebase("https://pointi-scoreboard.firebaseio.com/play-access/" + newAdmin.uid + "/" + params.playID);
-                                accessRef.set({
-                                    time: time.toUTCString()
-                                });
-                                $rootScope.toggle('overlay-add-admin', 'off');
-                                success = true;
-                                return true;
+                roundTitles.$loaded().then(function() {
+                    $scope.admins = admins;
+                    $scope.roundTitles = roundTitles;
+                    console.log("admins: " + admins.length);
+                    //console.log(admins);
+                    //$scope.player.playerNameTitle = player.playername;
+                    $scope.updatePlay = function() {
+                        console.log("play updated");
+                        play.$save();
+                        //$window.history.go(-1);
+                    }
+                    $scope.addAdmin = function() {
+                        console.log("add admin: " + $scope.adminEmail);
+                        var time = new Date();
+                        //FIND USER BY EMAIL ADDRESS
+                        var usersRef = new Firebase("https://pointi-scoreboard.firebaseio.com/users/");
+                        var success = false;
+                        var adminUid = "";
+                        var currentAdminRecordID = "";
+                        var adminAdminRecordID = "";
+                        usersRef.once('value', function(dataSnapshot) {
+                            dataSnapshot.forEach(function(childSnapshot) {
+                                //CHECK EACH USER'S EMAIL
+                                var adminEmail = childSnapshot.child("password").child("email").val();
+                                var adminName = childSnapshot.child("details").child("name").val();
+                                if(adminEmail == $scope.adminEmail) {
+                                    //ADD USER TO PLAY ADMIN LIST
+                                    var newAdmin = childSnapshot.val(); //admin USER OBJECT
+                                    var adminsListRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID + "/admins/" + newAdmin.uid); //ADD CHILD FOR admin UID
+                                    adminsListRef.set({
+                                        name: adminName //NAME OF admin
+                                    });
+                                    //ADD ACCESS RECORD FOR USER
+                                    var accessRef = new Firebase("https://pointi-scoreboard.firebaseio.com/play-access/" + newAdmin.uid + "/" + params.playID);
+                                    accessRef.set({
+                                        time: time.toUTCString()
+                                    });
+                                    $rootScope.toggle('overlay-add-admin', 'off');
+                                    success = true;
+                                    return true;
+                                }
+                            });
+                            if(!success) {
+                                //error message
+                                console.log("user not found");
+                                //$scope.add.error = "User not found";
                             }
+                        }, function(err) {
+                            console.log("Error with once(): " + err);
                         });
-                        if(!success) {
-                            //error message
-                            console.log("user not found");
-                            //$scope.add.error = "User not found";
-                        }
-                    }, function(err) {
-                        console.log("Error with once(): " + err);
-                    });
-                }
+                    }
+                    $scope.addRound = function() {
+                        console.log("add round");
+                        console.log($scope.title);
+                        var title = $scope.title;
+                        roundTitles.$add({
+                            title: title
+                        }).then(function(ref) {
+                            var id = ref.key();
+                            console.log("added record with id " + id);
+                            play.numberOfRounds += 1;
+                            play.$save();
+                        });
+                        $scope.roundTitle = "";
+                    }
+                });
             });
         }
     }
@@ -210,13 +229,16 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
             //PLAY
             var playRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID);
             var play = $firebase(playRef).$asObject();
+            var roundTitlesRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID + "/roundTitles");
             $scope.play = play;
             //PLAYERS
             var playerRef = new Firebase("https://pointi-scoreboard.firebaseio.com/plays/" + params.playID + "/players");
             var players = $firebase(playerRef).$asArray();
             players.$loaded().then(function() {
+                var roundTitles = $firebase(roundTitlesRef).$asArray();
                 $rootScope.loading = false;
                 $scope.players = players;
+                $scope.roundTitles = roundTitles;
                 var numberOfPlayers = players.length;
                 $scope.numberOfPlayers = numberOfPlayers;
                 $scope.scorePredicate = "playerName";
@@ -227,42 +249,40 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                 $scope.columnStyle3 = "";
 
                 function checkColumns() { //FOR SCOREBOARD VIEW
-                    var newNumberOfPlayers;
-                    var numberPerColumn = 10; //PER COLUMN
-                    playRef.child("numberOfPlayers").once("value", function(data) {
-                        newNumberOfPlayers = data.val();
-                    }); //CHECK REFERENCE DIRECTLY BECAUSE $scope.numberOfPlayers WILL BE OUT OF DATE
-                    var numberOfColumns = Math.ceil(newNumberOfPlayers / numberPerColumn); 
-                    //THIS COULD PROBABLY BE DONE NEATER
-                    var styles1 = []; //column #1
-                    var styles2 = []; //column #2
-                    var styles3 = []; //column #3
-                    //1 column layout
-                    styles1[1] = "col-xs-12 col-md-10 col-md-offset-1";
-                    styles2[1] = "hidden";
-                    styles3[1] = "hidden";
-                    //2 column layout
-                    styles1[2] = "col-xs-12 col-md-5 col-md-offset-1";
-                    styles2[2] = "col-xs-12 col-md-5 col-md-offset-1";
-                    styles3[2] = "hidden";
-                    //3 column layout
-                    styles1[3] = "col-xs-12 col-md-4";
-                    styles2[3] = "col-xs-12 col-md-4";
-                    styles3[3] = "col-xs-12 col-md-4";
-                    $scope.columnStyle1 = styles1[numberOfColumns];
-                    $scope.columnStyle2 = styles2[numberOfColumns];
-                    $scope.columnStyle3 = styles3[numberOfColumns];
+                    if(play.roundMode == false) {
+                        var newNumberOfPlayers;
+                        var numberPerColumn = 10; //PER COLUMN
+                        playRef.child("numberOfPlayers").once("value", function(data) {
+                            newNumberOfPlayers = data.val();
+                        }); //CHECK REFERENCE DIRECTLY BECAUSE $scope.numberOfPlayers WILL BE OUT OF DATE
+                        var numberOfColumns = Math.ceil(newNumberOfPlayers / numberPerColumn);
+                        //THIS COULD PROBABLY BE DONE NEATER
+                        var styles1 = []; //column #1
+                        var styles2 = []; //column #2
+                        var styles3 = []; //column #3
+                        //1 column layout
+                        styles1[1] = "col-xs-12 col-md-10 col-md-offset-1";
+                        styles2[1] = "hidden";
+                        styles3[1] = "hidden";
+                        //2 column layout
+                        styles1[2] = "col-xs-12 col-md-5 col-md-offset-1";
+                        styles2[2] = "col-xs-12 col-md-5 col-md-offset-1";
+                        styles3[2] = "hidden";
+                        //3 column layout
+                        styles1[3] = "col-xs-12 col-md-4";
+                        styles2[3] = "col-xs-12 col-md-4";
+                        styles3[3] = "col-xs-12 col-md-4";
+                        $scope.columnStyle1 = styles1[numberOfColumns];
+                        $scope.columnStyle2 = styles2[numberOfColumns];
+                        $scope.columnStyle3 = styles3[numberOfColumns];
+                    }
                 }
                 //if(!play.roundMode) {
-                    checkColumns(); //CHECK COLUMNS ON LOAD
-                    players.$watch(function(event) {
-                        checkColumns(); //CHECK COLUMNS EVERY TIME PLAYERS ARE ADDED OR REMOVED
-                    });
+                checkColumns(); //CHECK COLUMNS ON LOAD
+                players.$watch(function(event) {
+                    checkColumns(); //CHECK COLUMNS EVERY TIME PLAYERS ARE ADDED OR REMOVED
+                });
                 //}
-                
-                
-                
-                
                 //
                 //functions
                 //
@@ -276,7 +296,7 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     $scope.numberOfPlayers = numberOfPlayers; //^^^ REDUNDANT CAT IS REDUNDANT?
                     var playerName = $scope.playerName || 'anonymous'; //SHOULDN'T BE USED - SHOULD HANDLE BLANK FORM BETTER
                     $scope.players.$add({
-                        playerName: playerName,// .substr(0, 13), //LIMIT TO 13 CHARACTER NAMES - NOT NEEDED, WILL USE FILTERS
+                        playerName: playerName, // .substr(0, 13), //LIMIT TO 13 CHARACTER NAMES - NOT NEEDED, WILL USE FILTERS
                         playerScore: 0,
                         jokerRound: false,
                         turnOrder: 0,
@@ -321,9 +341,6 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     }
                     $rootScope.toggle('overlay-' + player.$id, 'off');
                     var time = new Date();
-                    play.time = time.toUTCString();
-                    play.ISOtime = time.toISOString(); //BOTH WERE SAVED WHILE I WORKED OUT DATE FORMATS, BUT FILTERS ARE NOW EMPLOYED ON THE ISO TIME
-                    play.$save();
                     if(play.roundMode && joker) {
                         update = update * 2;
                     } //OBVIOUSLY THIS SHOULD BE AN EDITABLE VARIABLE
@@ -361,6 +378,12 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                             });
                         }
                     });
+                    if(player.numberOfRounds > play.numberOfRounds) {
+                        play.numberOfRounds = player.numberOfRounds;
+                    }
+                    play.time = time.toUTCString();
+                    play.ISOtime = time.toISOString(); //BOTH WERE SAVED WHILE I WORKED OUT DATE FORMATS, BUT FILTERS ARE NOW EMPLOYED ON THE ISO TIME
+                    play.$save();
                 }
                 $scope.updateStars = function(player, update) {
                     var time = new Date();
@@ -402,6 +425,7 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                     var gameName = $scope.gameName || 'anonymous';
                     var time = new Date();
                     var roundMode = false;
+                    var displayHeadings = false;
                     if($scope.roundMode) {
                         roundMode = true
                     }
@@ -412,7 +436,9 @@ app.controller('ScoreController3', function($rootScope, $scope, $firebase, $rout
                         time: time.toUTCString(),
                         ISOtime: time.toISOString(),
                         numberOfPlayers: 0,
+                        numberOfRounds: 0,
                         roundMode: roundMode,
+                        displayHeadings: displayHeadings,
                         logoURL: ""
                     }).then(function(ref) {
                         var id = ref.key();

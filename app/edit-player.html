@@ -43,6 +43,7 @@
                     </table>
                     <div bs-panel class="form-actions text-center">
                         <div class="btn-group">
+                            <input type="text" ng-model="player.numberOfRounds" class="form-control">
                             <a class="btn btn-default" disabled="disabled">Total: {{player.playerScore}}</a>    
                             <a ng-click="updatePlayerTotal()" class="btn btn-primary">Update Total</a>
                         </div>

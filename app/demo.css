@@ -95,6 +95,10 @@ h1 {
     width: 120px;
     display: inline-block;
 }
+.logo-width{
+    width: 200px;
+    display: inline-block;
+}
 
 .score-width{
     width: 50px;
@@ -142,4 +146,25 @@ h1 {
   height: 0;
   padding-top: 0;
   padding-bottom: 0;
+}
+th.rotate {
+  /* Something you can count on */
+  height: 90px;
+  white-space: nowrap;
+}
+
+th.rotate > div {
+  transform: 
+    /* Magic Numbers */
+    translate(0px, 51px)
+    /* 45 is really 360 - 45 */
+    rotate(315deg);
+  width: 60px;
+}
+th.rotate > div > span {
+  /*border-bottom: 1px solid #ccc;*/
+  padding: 5px 10px;
+}
+.total-score{
+    border-left: 1px solid #ccc;
 }

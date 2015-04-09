@@ -14,7 +14,7 @@
                 <div class="row">
                     <div>
                         <div class="text-center">
-                            <h3><img src="{{play.logoURL}}" class="name-width img-rounded">&nbsp;&nbsp;&nbsp;{{play.gameName}}&nbsp;&nbsp;&nbsp;<span class="btn btn-default" disabled="disabled">{{play.ISOtime | date:'fullDate'}}</span> </h3>
+                            <h3><img src="{{play.logoURL}}" class="logo-width img-rounded">&nbsp;&nbsp;&nbsp;{{play.gameName}}&nbsp;&nbsp;&nbsp;<span class="btn btn-default" disabled="disabled">{{play.ISOtime | date:'fullDate'}}</span> </h3>
                         </div>
                     </div>
                 </div>
@@ -24,19 +24,20 @@
                         <div class="panel panel-default">
                             <div class="panel-body">
                                 <table class="table table-condensed table-hover">
-                                    <tr ng-repeat="player in players | orderBy:scoreBoardPredicate | displayPart:0:9" class="phone-listing">
+                                    <tr ng-if="play.displayHeadings"><th class="rotate"><div><span>&nbsp;</span></div></th><th class="rotate"><div><span>&nbsp;</span></div></th><th class="rotate" ng-repeat="title in roundTitles"><div><span><small>{{title.title}}</small></span></div></th><th class="rotate"><div><span>&nbsp;</span></div></th></tr>
+                                    <tr ng-repeat="player in players | orderBy:scoreBoardPredicate" class="phone-listing">
                                         <td>
                                             <h3 class="text-right">{{$index + 1}} - </h3>
                                         </td>
                                         <td>
                                             <h3><span class="text-capitalize"> {{player.playerName}}</span></h3>
                                         </td>
-                                        <td>
-                                            <h3><span ng-repeat="round in player.rounds"><a ng-if="round.joker" class="label label-info label-lg score-width">{{round.score}}</a><a class="label label-lg score-width" ng-if="!round.joker" style="color:black;">{{round.score}}</a><a ng-if="$first">&nbsp;</a><a ng-if="$middle">&nbsp;</a></span></h3>
+                                        <td ng-repeat="round in player.rounds">
+                                            <h3><span><span ng-if="round.joker" class="label label-success label-lg score-width">{{round.score}}</span><span class="label label-lg score-width" ng-if="!round.joker" style="color:black;">{{round.score}}</span><span ng-if="$first">&nbsp;</span><span ng-if="$middle">&nbsp;</span></span></h3>
                                         </td>
-                                        <td>
+                                        <td class="total-score">
 
-                                            <h3>{{player.playerScore}}</h3>
+                                            <h3>&nbsp;<span>{{player.playerScore}}</span></h3>
                                         </td>
                                     </tr>
                                 </table>
@@ -44,29 +45,6 @@
                         </div>
                     </div>
                     <!-- <div id="column2" class="col-xs-12 col-md-4"> -->
-                    <div id="column2" ng-class="columnStyle2">
-                        <div class="panel panel-default">
-                            <div class="panel-body">
-                                <table class="table table-condensed table-hover">
-                                    <tr ng-repeat="player in players | orderBy:scoreBoardPredicate | displayPart:10:19" class="phone-listing">
-                                        <td>
-                                            <h3 class="text-right">{{$index + 11}} - </h3>
-                                        </td>
-                                        <td>
-                                            <h3><span class="text-capitalize"> {{player.playerName}}</span></h3>
-                                        </td>
-                                        <td>
-                                            <h3><span ng-repeat="round in player.rounds"><a ng-if="round.joker" class="label label-info label-lg score-width">{{round.score}}</a><a class="label label-lg score-width" ng-if="!round.joker" style="color:black;">{{round.score}}</a><a ng-if="$first">&nbsp;</a><a ng-if="$middle">&nbsp;</a></span></h3>
-                                        </td>
-                                        <td>
-
-                                            <h3>{{player.playerScore}}</h3>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
                     <!-- <div id="column3" class="col-xs-12 col-md-4"> -->
                 </div>
             </div>
