@@ -171,8 +171,8 @@ app.controller('PlayController', function($rootScope, $scope, $firebase, $routeP
                         }).then(function(ref) {
                             var id = ref.key();
                             console.log("added record with id " + id);
-                            play.numberOfRounds += 1;
-                            play.$save();
+                            //play.numberOfRounds += 1;
+                            //play.$save();
                         });
                         $scope.roundTitle = "";
                     }
